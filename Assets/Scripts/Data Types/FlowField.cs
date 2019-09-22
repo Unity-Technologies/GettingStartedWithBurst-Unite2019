@@ -6,8 +6,8 @@ public class FlowField
 {
     Map map;
     public List<Vector2Int> targets;
-    public float[,] stepField;
-    public Vector2[,] flowField;
+    public float[] stepField;
+    public Vector2[] flowField;
 
     public PathType pathType;
 
@@ -41,7 +41,7 @@ public class FlowField
 
     public Vector2 Get(Vector2Int tile)
     {
-        return flowField[tile.x, tile.y];
+        return flowField[tile.x + tile.y * map.width];
     }
 
     public void Generate()
@@ -50,8 +50,8 @@ public class FlowField
 
         if (stepField == null)
         {
-            stepField = new float[map.width, map.height];
-            flowField = new Vector2[map.width, map.height];
+            stepField = new float[map.width * map.height];
+            flowField = new Vector2[map.width * map.height];
         }
 
         if (openSet == null)
@@ -72,14 +72,14 @@ public class FlowField
         {
             for (j = 0; j < map.height; j++)
             {
-                stepField[i, j] = int.MaxValue;
-                flowField[i, j] = Vector2.zero;
+                stepField[i + j * map.width] = int.MaxValue;
+                flowField[i + j * map.width] = Vector2.zero;
             }
         }
 
         for (i = 0; i < targets.Count; i++)
         {
-            stepField[targets[i].x, targets[i].y] = 0;
+            stepField[targets[i].x + targets[i].y * map.width] = 0;
         }
 
         UnityEngine.Profiling.Profiler.BeginSample("FlowGenerate");
@@ -88,7 +88,7 @@ public class FlowField
             for (j = 0; j < openSet.Count; j++)
             {
                 Vector2Int tile = openSet[j];
-                float existingCost = stepField[tile.x, tile.y];
+                float existingCost = stepField[tile.x + tile.y * map.width];
                 for (i = 0; i < moveDirs.Length; i++)
                 {
                     Vector2Int newTile = new Vector2Int(tile.x + moveDirs[i].x, tile.y + moveDirs[i].y);
@@ -115,9 +115,9 @@ public class FlowField
                                         }
                                     }
                                     float cost = moveCost * moveDirs[i].magnitude + existingCost;
-                                    if (cost < stepField[newTile.x, newTile.y])
+                                    if (cost < stepField[newTile.x + newTile.y * map.width])
                                     {
-                                        stepField[newTile.x, newTile.y] = cost;
+                                        stepField[newTile.x + newTile.y * map.width] = cost;
                                         nextSet.Add(newTile);
                                     }
                                 }
@@ -140,7 +140,7 @@ public class FlowField
                 Vector2 flow = Vector2.zero;
                 if (map.IsWall(tile) == false)
                 {
-                    float myCost = stepField[i, j];
+                    float myCost = stepField[i + j * map.width];
                     float minNeighborCost = myCost;
                     Vector2Int bestNeighbor = new Vector2Int(i, j);
                     for (k = 0; k < moveDirs.Length; k++)
@@ -154,9 +154,9 @@ public class FlowField
                             {
                                 if (map.IsWall(checkTileB) == false)
                                 {
-                                    if (stepField[newTile.x, newTile.y] < minNeighborCost)
+                                    if (stepField[newTile.x + newTile.y * map.width] < minNeighborCost)
                                     {
-                                        minNeighborCost = stepField[newTile.x, newTile.y];
+                                        minNeighborCost = stepField[newTile.x + newTile.y * map.width];
                                         bestNeighbor = newTile;
                                     }
                                 }
@@ -171,7 +171,7 @@ public class FlowField
                         flow = flow.normalized;
                     }
                 }
-                flowField[i, j] = flow;
+                flowField[i + j * map.width] = flow;
             }
         }
         UnityEngine.Profiling.Profiler.EndSample();

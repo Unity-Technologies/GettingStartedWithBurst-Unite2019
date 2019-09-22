@@ -4,9 +4,9 @@ using UnityEngine;
 
 public class Map
 {
-    public MapTile[,] tiles;
-    public int[,] occupants;
-    public int[,] occupantTickers;
+    public MapTile[] tiles;
+    public int[] occupants;
+    public int[] occupantTickers;
     public int occupantTicker = 0;
     public int maxCost = 100;
     public int width;
@@ -17,36 +17,36 @@ public class Map
         width = myWidth;
         height = myHeight;
 
-        tiles = new MapTile[myWidth, myHeight];
-        occupants = new int[myWidth, myHeight];
-        occupantTickers = new int[myWidth, myHeight];
+        tiles = new MapTile[myWidth * myHeight];
+        occupants = new int[myWidth * myHeight];
+        occupantTickers = new int[myWidth * myHeight];
     }
 
     public int GetOccupants(Vector2Int tile)
     {
-        return occupants[tile.x, tile.y];
+        return occupants[tile.x + tile.y * width];
     }
 
     public void IncrementOccupants(Vector2Int tile)
     {
-        occupants[tile.x, tile.y] += 1;
+        occupants[tile.x + tile.y * width] += 1;
     }
 
     public void ResetOccupants(Vector2Int tile)
     {
-        occupants[tile.x, tile.y] = 1;
+        occupants[tile.x + tile.y * width] = 1;
     }
 
     public bool IsCurrentOccupantTicker(Vector2Int tile)
     {
-        return occupantTickers[tile.x, tile.y] == occupantTicker;
+        return occupantTickers[tile.x + tile.y * width] == occupantTicker;
     }
 
     public void UpdateOccupantTicker(Vector2Int tile)
     {
         if (!IsCurrentOccupantTicker(tile))
         {
-            occupantTickers[tile.x, tile.y] = occupantTicker;
+            occupantTickers[tile.x + tile.y * width] = occupantTicker;
             ResetOccupants(tile);
         }
         else
@@ -76,7 +76,7 @@ public class Map
             return true;
         }
 
-        if (tiles[tile.x, tile.y].moveCost == maxCost)
+        if (tiles[tile.x + tile.y * width].moveCost == maxCost)
         {
             return true;
         }
@@ -88,16 +88,16 @@ public class Map
 
     public bool IsResourceSpawner(Vector2Int tile)
     {
-        return tiles[tile.x, tile.y].isResourceSpawner;
+        return tiles[tile.x + tile.y * width].isResourceSpawner;
     }
 
     public MapTile GetMapTile(Vector2Int tile)
     {
-        return tiles[tile.x, tile.y];
+        return tiles[tile.x + tile.y * width];
     }
 
     public void SetMapTile(Vector2Int tile, MapTile toSet)
     {
-        tiles[tile.x, tile.y] = toSet;
+        tiles[tile.x + tile.y * width] = toSet;
     }
 }
