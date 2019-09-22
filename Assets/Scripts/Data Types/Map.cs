@@ -4,100 +4,166 @@ using UnityEngine;
 
 public class Map
 {
-    public MapTile[] tiles;
-    public int[] occupants;
-    public int[] occupantTickers;
-    public int occupantTicker = 0;
-    public int maxCost = 100;
-    public int width;
-    public int height;
+    public struct MapDataStore
+    {
+        public MapTile[] tiles;
+        public int[] occupants;
+        public int[] occupantTickers;
+        public int occupantTicker;
+        public int maxCost;
+        public int width;
+        public int height;
+
+        public int GetOccupants(Vector2Int tile)
+        {
+            return occupants[tile.x + tile.y * width];
+        }
+
+        public void IncrementOccupants(Vector2Int tile)
+        {
+            occupants[tile.x + tile.y * width] += 1;
+        }
+
+        public void ResetOccupants(Vector2Int tile)
+        {
+            occupants[tile.x + tile.y * width] = 1;
+        }
+
+        public bool IsCurrentOccupantTicker(Vector2Int tile)
+        {
+            return occupantTickers[tile.x + tile.y * width] == occupantTicker;
+        }
+
+        public void UpdateOccupantTicker(Vector2Int tile)
+        {
+            if (!IsCurrentOccupantTicker(tile))
+            {
+                occupantTickers[tile.x + tile.y * width] = occupantTicker;
+                ResetOccupants(tile);
+            }
+            else
+            {
+                IncrementOccupants(tile);
+            }
+        }
+
+        public bool IsInsideMap(Vector2Int tile)
+        {
+            if (tile.x < 0 || tile.x >= width)
+            {
+                return false;
+            }
+            if (tile.y < 0 || tile.y >= height)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        public bool IsWall(Vector2Int tile)
+        {
+            if (tile.x < 0 || tile.x >= width || tile.y < 0 || tile.y >= height)
+            {
+                return true;
+            }
+
+            if (tiles[tile.x + tile.y * width].moveCost == maxCost)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        public bool IsResourceSpawner(Vector2Int tile)
+        {
+            return tiles[tile.x + tile.y * width].isResourceSpawner;
+        }
+
+        public MapTile GetMapTile(Vector2Int tile)
+        {
+            return tiles[tile.x + tile.y * width];
+        }
+
+        public void SetMapTile(Vector2Int tile, MapTile toSet)
+        {
+            tiles[tile.x + tile.y * width] = toSet;
+        }
+
+    };
+
+    public MapDataStore mapDataStore;
+
+    public int width => mapDataStore.width;
+    public int height => mapDataStore.height;
+    public int maxCost => mapDataStore.maxCost;
 
     public Map(int myWidth, int myHeight, string mapString)
     {
-        width = myWidth;
-        height = myHeight;
+        mapDataStore = new MapDataStore
+        {
+            width = myWidth,
+            height = myHeight,
 
-        tiles = new MapTile[myWidth * myHeight];
-        occupants = new int[myWidth * myHeight];
-        occupantTickers = new int[myWidth * myHeight];
+            occupantTicker = 0,
+            maxCost = 100,
+            tiles = new MapTile[myWidth * myHeight],
+            occupants = new int[myWidth * myHeight],
+            occupantTickers = new int[myWidth * myHeight],
+        };
     }
 
     public int GetOccupants(Vector2Int tile)
     {
-        return occupants[tile.x + tile.y * width];
+        return mapDataStore.GetOccupants(tile);
     }
 
     public void IncrementOccupants(Vector2Int tile)
     {
-        occupants[tile.x + tile.y * width] += 1;
-    }
-
-    public void ResetOccupants(Vector2Int tile)
-    {
-        occupants[tile.x + tile.y * width] = 1;
+        mapDataStore.IncrementOccupants(tile);
     }
 
     public bool IsCurrentOccupantTicker(Vector2Int tile)
     {
-        return occupantTickers[tile.x + tile.y * width] == occupantTicker;
+        return mapDataStore.IsCurrentOccupantTicker(tile);
     }
 
     public void UpdateOccupantTicker(Vector2Int tile)
     {
-        if (!IsCurrentOccupantTicker(tile))
-        {
-            occupantTickers[tile.x + tile.y * width] = occupantTicker;
-            ResetOccupants(tile);
-        }
-        else
-        {
-            IncrementOccupants(tile);
-        }
+        mapDataStore.UpdateOccupantTicker(tile);
     }
-
 
     public bool IsInsideMap(Vector2Int tile)
     {
-        if (tile.x < 0 || tile.x >= width)
-        {
-            return false;
-        }
-        if (tile.y < 0 || tile.y >= height)
-        {
-            return false;
-        }
-
-        return true;
+        return mapDataStore.IsInsideMap(tile);
     }
+
     public bool IsWall(Vector2Int tile)
     {
-        if (tile.x < 0 || tile.x >= width || tile.y < 0 || tile.y >= height)
-        {
-            return true;
-        }
-
-        if (tiles[tile.x + tile.y * width].moveCost == maxCost)
-        {
-            return true;
-        }
-        else
-        {
-            return false;
-        }
+        return mapDataStore.IsWall(tile);
     }
 
     public bool IsResourceSpawner(Vector2Int tile)
     {
-        return tiles[tile.x + tile.y * width].isResourceSpawner;
+        return mapDataStore.IsResourceSpawner(tile);
     }
 
     public MapTile GetMapTile(Vector2Int tile)
     {
-        return tiles[tile.x + tile.y * width];
+        return mapDataStore.GetMapTile(tile);
     }
 
     public void SetMapTile(Vector2Int tile, MapTile toSet)
     {
-        tiles[tile.x + tile.y * width] = toSet;
+        mapDataStore.SetMapTile(tile, toSet);
     }
+
+    public void IncrementOccupantTicker()
+    {
+        mapDataStore.occupantTicker++;
+    }
+
 }

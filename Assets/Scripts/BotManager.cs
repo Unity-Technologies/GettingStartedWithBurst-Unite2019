@@ -96,7 +96,7 @@ public class BotManager : MonoBehaviour
     {
         int i, j;
 
-        factory.map.occupantTicker++;
+        factory.map.IncrementOccupantTicker();
 
         UnityEngine.Profiling.Profiler.BeginSample("BotResourceUpdate");
         for (i = 0; i < bots.Count; i++)
