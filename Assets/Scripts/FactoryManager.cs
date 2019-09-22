@@ -312,4 +312,13 @@ public class FactoryManager : MonoBehaviour
         Graphics.DrawMeshInstanced(wallMesh, 0, resourceSpawnerMaterial, resourceSpawnerMatrices);
         UnityEngine.Profiling.Profiler.EndSample();
     }
+
+    private void OnDestroy()
+    {
+        map.Destroy();
+        foreach(var ff in flowFields)
+        {
+            ff.Destroy();
+        }
+    }
 }

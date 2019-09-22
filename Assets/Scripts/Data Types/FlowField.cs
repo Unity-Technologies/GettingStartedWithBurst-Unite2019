@@ -1,13 +1,15 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Unity.Collections;
 
 public class FlowField
 {
+    bool initialised = false;
     Map map;
     public List<Vector2Int> targets;
-    public float[] stepField;
-    public Vector2[] flowField;
+    public NativeArray<float> stepField;
+    public NativeArray<Vector2> flowField;
 
     public PathType pathType;
 
@@ -39,6 +41,12 @@ public class FlowField
         Generate();
     }
 
+    public void Destroy()
+    {
+        stepField.Dispose();
+        flowField.Dispose();
+    }
+
     public Vector2 Get(Vector2Int tile)
     {
         return flowField[tile.x + tile.y * map.width];
@@ -48,10 +56,11 @@ public class FlowField
     {
         int i, j, k;
 
-        if (stepField == null)
+        if (!initialised)
         {
-            stepField = new float[map.width * map.height];
-            flowField = new Vector2[map.width * map.height];
+            stepField = new NativeArray<float>(map.width * map.height, Allocator.Persistent);
+            flowField = new NativeArray<Vector2>(map.width * map.height, Allocator.Persistent);
+            initialised = true;
         }
 
         if (openSet == null)

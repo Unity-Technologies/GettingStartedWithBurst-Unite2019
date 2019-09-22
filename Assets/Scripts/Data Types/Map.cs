@@ -1,14 +1,15 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Unity.Collections;
 
 public class Map
 {
     public struct MapDataStore
     {
-        public MapTile[] tiles;
-        public int[] occupants;
-        public int[] occupantTickers;
+        public NativeArray<MapTile> tiles;
+        public NativeArray<int> occupants;
+        public NativeArray<int> occupantTickers;
         public int occupantTicker;
         public int maxCost;
         public int width;
@@ -110,9 +111,9 @@ public class Map
 
             occupantTicker = 0,
             maxCost = 100,
-            tiles = new MapTile[myWidth * myHeight],
-            occupants = new int[myWidth * myHeight],
-            occupantTickers = new int[myWidth * myHeight],
+            tiles = new NativeArray<MapTile>(myWidth * myHeight, Allocator.Persistent),
+            occupants = new NativeArray<int>(myWidth * myHeight, Allocator.Persistent),
+            occupantTickers = new NativeArray<int>(myWidth * myHeight, Allocator.Persistent),
         };
     }
 
@@ -166,4 +167,10 @@ public class Map
         mapDataStore.occupantTicker++;
     }
 
+    public void Destroy()
+    {
+        mapDataStore.tiles.Dispose();
+        mapDataStore.occupants.Dispose();
+        mapDataStore.occupantTickers.Dispose();
+    }
 }
