@@ -79,6 +79,7 @@ public class FlowField
             stepField[targets[i].x, targets[i].y] = 0;
         }
 
+        UnityEngine.Profiling.Profiler.BeginSample("FlowGenerate");
         while (openSet.Count > 0)
         {
             for (j = 0; j < openSet.Count; j++)
@@ -170,5 +171,6 @@ public class FlowField
                 flowField[i, j] = flow;
             }
         }
+        UnityEngine.Profiling.Profiler.EndSample();
     }
 }

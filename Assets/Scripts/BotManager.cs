@@ -98,6 +98,7 @@ public class BotManager : MonoBehaviour
 
         factory.map.occupantTicker++;
 
+        UnityEngine.Profiling.Profiler.BeginSample("BotResourceUpdate");
         for (i = 0; i < bots.Count; i++)
         {
             FactoryBot bot = bots[i];
@@ -209,10 +210,13 @@ public class BotManager : MonoBehaviour
             bot.hitCount = 0;
             bots[i] = bot;
         }
+        UnityEngine.Profiling.Profiler.EndSample();
 
-
+        UnityEngine.Profiling.Profiler.BeginSample("BotSort");
         SortBots();
+        UnityEngine.Profiling.Profiler.EndSample();
 
+        UnityEngine.Profiling.Profiler.BeginSample("Transform");
         for (i = 0; i < bots.Count; i++)
         {
             FactoryBot bot1 = bots[i];
@@ -285,7 +289,9 @@ public class BotManager : MonoBehaviour
                 }
             }
         }
+        UnityEngine.Profiling.Profiler.EndSample();
 
+        UnityEngine.Profiling.Profiler.BeginSample("MatrixColor");
         for (i = 0; i < bots.Count; i++)
         {
             FactoryBot bot = bots[i];
@@ -299,7 +305,9 @@ public class BotManager : MonoBehaviour
                 botColors[i / instanceCount][i - (i / instanceCount) * instanceCount] = fullBotColor;
             }
         }
+        UnityEngine.Profiling.Profiler.EndSample();
 
+        UnityEngine.Profiling.Profiler.BeginSample("DrawMesh");
         for (i = 0; i < botMatrices.Count; i++)
         {
             if (bots.Count >= i * instanceCount)
@@ -308,5 +316,6 @@ public class BotManager : MonoBehaviour
                 Graphics.DrawMeshInstanced(botMesh, 0, botMaterial, botMatrices[i], Mathf.Min(instanceCount, bots.Count - i * instanceCount), botMatProperties[i]);
             }
         }
+        UnityEngine.Profiling.Profiler.EndSample();
     }
 }

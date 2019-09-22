@@ -274,6 +274,7 @@ public class FactoryManager : MonoBehaviour
 
     void Update()
     {
+        UnityEngine.Profiling.Profiler.BeginSample("UserInput");
         if (Input.GetKey(KeyCode.Mouse0))
         {
             Vector3 mousePos = mainCam.ScreenToWorldPoint(Input.mousePosition);
@@ -292,18 +293,23 @@ public class FactoryManager : MonoBehaviour
                 EditTile(tile, currentTool, true);
             }
         }
+        UnityEngine.Profiling.Profiler.EndSample();
 
+        UnityEngine.Profiling.Profiler.BeginSample("FlowFields");
         flowFields[flowFieldTicker].Generate();
         flowFieldTicker++;
         if (flowFieldTicker >= flowFields.Count)
         {
             flowFieldTicker = 0;
         }
+        UnityEngine.Profiling.Profiler.EndSample();
 
+        UnityEngine.Profiling.Profiler.BeginSample("DrawMesh");
         Graphics.DrawMeshInstanced(wallMesh, 0, crafterPathMaterial, crafterPathMatrices);
         Graphics.DrawMeshInstanced(wallMesh, 0, resourcePathMaterial, resourcePathMatrices);
         Graphics.DrawMeshInstanced(wallMesh, 0, wallMaterial, wallMatrices);
         Graphics.DrawMeshInstanced(wallMesh, 0, crafterMaterial, crafterMatrices);
         Graphics.DrawMeshInstanced(wallMesh, 0, resourceSpawnerMaterial, resourceSpawnerMatrices);
+        UnityEngine.Profiling.Profiler.EndSample();
     }
 }
