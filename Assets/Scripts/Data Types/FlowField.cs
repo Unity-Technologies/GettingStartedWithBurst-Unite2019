@@ -22,8 +22,8 @@ public class FlowField
                                           new Vector2Int(-1,0),
                                          new Vector2Int(-1,1)};
 
-    List<Vector2Int> openSet;
-    List<Vector2Int> nextSet;
+    NativeList<Vector2Int> openSet;
+    NativeList<Vector2Int> nextSet;
 
     public FlowField(Map myMap, Vector2Int targetTile, PathType type = PathType.Default)
     {
@@ -45,6 +45,8 @@ public class FlowField
     {
         stepField.Dispose();
         flowField.Dispose();
+        nextSet.Dispose();
+        openSet.Dispose();
     }
 
     public Vector2 Get(Vector2Int tile)
@@ -60,19 +62,14 @@ public class FlowField
         {
             stepField = new NativeArray<float>(map.width * map.height, Allocator.Persistent);
             flowField = new NativeArray<Vector2>(map.width * map.height, Allocator.Persistent);
+            openSet = new NativeList<Vector2Int>(Allocator.Persistent);
+            nextSet = new NativeList<Vector2Int>(Allocator.Persistent);
             initialised = true;
         }
 
-        if (openSet == null)
-        {
-            openSet = new List<Vector2Int>();
-            nextSet = new List<Vector2Int>();
-        }
-        else
-        {
-            openSet.Clear();
-            nextSet.Clear();
-        }
+        openSet.Clear();
+        nextSet.Clear();
+        
         for (i = 0; i < targets.Count; i++)
         {
             openSet.Add(targets[i]);
@@ -92,9 +89,9 @@ public class FlowField
         }
 
         UnityEngine.Profiling.Profiler.BeginSample("FlowGenerate");
-        while (openSet.Count > 0)
+        while (openSet.Length > 0)
         {
-            for (j = 0; j < openSet.Count; j++)
+            for (j = 0; j < openSet.Length; j++)
             {
                 Vector2Int tile = openSet[j];
                 float existingCost = stepField[tile.x + tile.y * map.width];
@@ -135,7 +132,7 @@ public class FlowField
                     }
                 }
             }
-            List<Vector2Int> temp = openSet;
+            NativeList<Vector2Int> temp = openSet;
             openSet = nextSet;
             nextSet = temp;
             nextSet.Clear();
