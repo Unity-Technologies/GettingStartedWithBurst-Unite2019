@@ -79,7 +79,7 @@ public class FactoryManager : MonoBehaviour
 
         if (deleteOldTile)
         {
-            MapTile currentTile = map.tiles[tile.x, tile.y];
+            MapTile currentTile = map.GetMapTile(tile);
 
             if (currentTile.isResourceSpawner)
             {
@@ -190,7 +190,7 @@ public class FactoryManager : MonoBehaviour
             resourcePathMatrices.Add(GetTileMatrix(tile));
         }
 
-        map.tiles[tile.x, tile.y] = newTile;
+        map.SetMapTile(tile, newTile);
     }
 
     void Awake()

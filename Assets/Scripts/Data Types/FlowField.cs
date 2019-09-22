@@ -9,7 +9,6 @@ public class FlowField
     public float[,] stepField;
     public Vector2[,] flowField;
 
-    public int maxPathCost;
     public PathType pathType;
 
     Vector2Int[] moveDirs = new Vector2Int[] {new Vector2Int(0,1),
@@ -40,6 +39,10 @@ public class FlowField
         Generate();
     }
 
+    public Vector2 Get(Vector2Int tile)
+    {
+        return flowField[tile.x, tile.y];
+    }
 
     public void Generate()
     {
@@ -99,14 +102,14 @@ public class FlowField
                             {
                                 if (map.IsWall(checkTileB) == false)
                                 {
-                                    float moveCost = map.tiles[newTile.x, newTile.y].moveCost;
-                                    if (map.occupantTickers[newTile.x, newTile.y] == map.occupantTicker)
+                                    float moveCost = map.GetMapTile(newTile).moveCost;
+                                    if (map.IsCurrentOccupantTicker(newTile))
                                     {
-                                        moveCost += map.occupants[newTile.x, newTile.y] * .5f;
+                                        moveCost += map.GetOccupants(newTile) * .5f;
                                     }
                                     if (pathType != PathType.Default)
                                     {
-                                        if (pathType == map.tiles[newTile.x, newTile.y].pathType)
+                                        if (pathType == map.GetMapTile(newTile).pathType)
                                         {
                                             moveCost *= .3f;
                                         }

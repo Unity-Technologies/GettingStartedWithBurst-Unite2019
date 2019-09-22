@@ -14,8 +14,6 @@ public class Map
 
     public Map(int myWidth, int myHeight, string mapString)
     {
-        int i, j;
-
         width = myWidth;
         height = myHeight;
 
@@ -23,6 +21,40 @@ public class Map
         occupants = new int[myWidth, myHeight];
         occupantTickers = new int[myWidth, myHeight];
     }
+
+    public int GetOccupants(Vector2Int tile)
+    {
+        return occupants[tile.x, tile.y];
+    }
+
+    public void IncrementOccupants(Vector2Int tile)
+    {
+        occupants[tile.x, tile.y] += 1;
+    }
+
+    public void ResetOccupants(Vector2Int tile)
+    {
+        occupants[tile.x, tile.y] = 1;
+    }
+
+    public bool IsCurrentOccupantTicker(Vector2Int tile)
+    {
+        return occupantTickers[tile.x, tile.y] == occupantTicker;
+    }
+
+    public void UpdateOccupantTicker(Vector2Int tile)
+    {
+        if (!IsCurrentOccupantTicker(tile))
+        {
+            occupantTickers[tile.x, tile.y] = occupantTicker;
+            ResetOccupants(tile);
+        }
+        else
+        {
+            IncrementOccupants(tile);
+        }
+    }
+
 
     public bool IsInsideMap(Vector2Int tile)
     {
@@ -52,5 +84,20 @@ public class Map
         {
             return false;
         }
+    }
+
+    public bool IsResourceSpawner(Vector2Int tile)
+    {
+        return tiles[tile.x, tile.y].isResourceSpawner;
+    }
+
+    public MapTile GetMapTile(Vector2Int tile)
+    {
+        return tiles[tile.x, tile.y];
+    }
+
+    public void SetMapTile(Vector2Int tile, MapTile toSet)
+    {
+        tiles[tile.x, tile.y] = toSet;
     }
 }

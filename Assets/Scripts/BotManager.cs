@@ -108,15 +108,8 @@ public class BotManager : MonoBehaviour
             uv.y = 3f * uv.y * uv.y - 2f * uv.y * uv.y * uv.y;
 
             Vector2Int hitTile = new Vector2Int(Mathf.FloorToInt(bot.position.x + .5f), Mathf.FloorToInt(bot.position.y + .5f));
-            if (factory.map.occupantTickers[hitTile.x, hitTile.y] != factory.map.occupantTicker)
-            {
-                factory.map.occupantTickers[hitTile.x, hitTile.y] = factory.map.occupantTicker;
-                factory.map.occupants[hitTile.x, hitTile.y] = 1;
-            }
-            else
-            {
-                factory.map.occupants[hitTile.x, hitTile.y] += 1;
-            }
+
+            factory.map.UpdateOccupantTicker(hitTile);
 
             if (bot.targetCrafter == null)
             {
@@ -139,7 +132,7 @@ public class BotManager : MonoBehaviour
                 {
                     if (bot.holdingResource == false)
                     {
-                        if (factory.map.tiles[hitTile.x, hitTile.y].isResourceSpawner)
+                        if (factory.map.IsResourceSpawner(hitTile))
                         {
                             bot.holdingResource = true;
                         }
@@ -163,8 +156,8 @@ public class BotManager : MonoBehaviour
             {
                 if (factory.map.IsInsideMap(tile) && factory.map.IsInsideMap(new Vector2Int(tile.x + 1, tile.y + 1)))
                 {
-                    Vector2 a = bot.navigator.flowField[tile.x, tile.y];
-                    Vector2 b = bot.navigator.flowField[tile.x + 1, tile.y];
+                    Vector2 a = bot.navigator.Get(tile);
+                    Vector2 b = bot.navigator.Get(tile + new Vector2Int(1, 0));
 
                     if (a == Vector2.zero)
                     {
@@ -175,8 +168,8 @@ public class BotManager : MonoBehaviour
                         b = a;
                     }
 
-                    Vector2 c = bot.navigator.flowField[tile.x, tile.y + 1];
-                    Vector2 d = bot.navigator.flowField[tile.x + 1, tile.y + 1];
+                    Vector2 c = bot.navigator.Get(tile + new Vector2Int(0, 1));
+                    Vector2 d = bot.navigator.Get(tile + new Vector2Int(1, 1));
                     if (c == Vector2.zero)
                     {
                         c = d;
