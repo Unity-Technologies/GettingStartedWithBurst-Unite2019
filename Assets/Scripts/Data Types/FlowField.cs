@@ -22,8 +22,8 @@ public class FlowField
                                           new Vector2Int(-1,0),
                                          new Vector2Int(-1,1)};
 
-    NativeList<Vector2Int> openSet;
-    NativeList<Vector2Int> nextSet;
+    public NativeList<Vector2Int> openSet;
+    public NativeList<Vector2Int> nextSet;
 
     public FlowField(Map myMap, Vector2Int targetTile, PathType type = PathType.Default)
     {
@@ -56,7 +56,7 @@ public class FlowField
 
     public void Generate()
     {
-        int i, j, k;
+        int ii, jj;
 
         if (!initialised)
         {
@@ -70,114 +70,119 @@ public class FlowField
         openSet.Clear();
         nextSet.Clear();
         
-        for (i = 0; i < targets.Count; i++)
+        for (ii = 0; ii < targets.Count; ii++)
         {
-            openSet.Add(targets[i]);
+            openSet.Add(targets[ii]);
         }
-        for (i = 0; i < map.width; i++)
+        for (ii = 0; ii < map.width; ii++)
         {
-            for (j = 0; j < map.height; j++)
+            for (jj = 0; jj < map.height; jj++)
             {
-                stepField[i + j * map.width] = int.MaxValue;
-                flowField[i + j * map.width] = Vector2.zero;
+                stepField[ii + jj * map.width] = int.MaxValue;
+                flowField[ii + jj * map.width] = Vector2.zero;
             }
         }
 
-        for (i = 0; i < targets.Count; i++)
+        for (ii = 0; ii < targets.Count; ii++)
         {
-            stepField[targets[i].x + targets[i].y * map.width] = 0;
+            stepField[targets[ii].x + targets[ii].y * map.width] = 0;
         }
 
         UnityEngine.Profiling.Profiler.BeginSample("FlowGenerate");
-        while (openSet.Length > 0)
+        
         {
-            for (j = 0; j < openSet.Length; j++)
-            {
-                Vector2Int tile = openSet[j];
-                float existingCost = stepField[tile.x + tile.y * map.width];
-                for (i = 0; i < moveDirs.Length; i++)
-                {
-                    Vector2Int newTile = new Vector2Int(tile.x + moveDirs[i].x, tile.y + moveDirs[i].y);
-                    if (map.IsInsideMap(newTile))
-                    {
-                        if (map.IsWall(newTile) == false)
-                        {
-                            Vector2Int checkTileA = new Vector2Int(tile.x + moveDirs[i].x, tile.y);
-                            Vector2Int checkTileB = new Vector2Int(tile.x, tile.y + moveDirs[i].y);
-                            if (map.IsWall(checkTileA) == false)
-                            {
-                                if (map.IsWall(checkTileB) == false)
-                                {
-                                    float moveCost = map.GetMapTile(newTile).moveCost;
-                                    if (map.IsCurrentOccupantTicker(newTile))
-                                    {
-                                        moveCost += map.GetOccupants(newTile) * .5f;
-                                    }
-                                    if (pathType != PathType.Default)
-                                    {
-                                        if (pathType == map.GetMapTile(newTile).pathType)
-                                        {
-                                            moveCost *= .3f;
-                                        }
-                                    }
-                                    float cost = moveCost * moveDirs[i].magnitude + existingCost;
-                                    if (cost < stepField[newTile.x + newTile.y * map.width])
-                                    {
-                                        stepField[newTile.x + newTile.y * map.width] = cost;
-                                        nextSet.Add(newTile);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            NativeList<Vector2Int> temp = openSet;
-            openSet = nextSet;
-            nextSet = temp;
-            nextSet.Clear();
-        }
+            int i,j,k;
 
-        for (i = 0; i < map.width; i++)
-        {
-            for (j = 0; j < map.height; j++)
+            while (openSet.Length > 0)
             {
-                Vector2Int tile = new Vector2Int(i, j);
-                Vector2 flow = Vector2.zero;
-                if (map.IsWall(tile) == false)
+                for (j = 0; j < openSet.Length; j++)
                 {
-                    float myCost = stepField[i + j * map.width];
-                    float minNeighborCost = myCost;
-                    Vector2Int bestNeighbor = new Vector2Int(i, j);
-                    for (k = 0; k < moveDirs.Length; k++)
+                    Vector2Int tile = openSet[j];
+                    float existingCost = stepField[tile.x + tile.y * map.width];
+                    for (i = 0; i < moveDirs.Length; i++)
                     {
-                        Vector2Int newTile = new Vector2Int(tile.x + moveDirs[k].x, tile.y + moveDirs[k].y);
+                        Vector2Int newTile = new Vector2Int(tile.x + moveDirs[i].x, tile.y + moveDirs[i].y);
                         if (map.IsInsideMap(newTile))
                         {
-                            Vector2Int checkTileA = new Vector2Int(tile.x + moveDirs[k].x, tile.y);
-                            Vector2Int checkTileB = new Vector2Int(tile.x, tile.y + moveDirs[k].y);
-                            if (map.IsWall(checkTileA) == false)
+                            if (map.IsWall(newTile) == false)
                             {
-                                if (map.IsWall(checkTileB) == false)
+                                Vector2Int checkTileA = new Vector2Int(tile.x + moveDirs[i].x, tile.y);
+                                Vector2Int checkTileB = new Vector2Int(tile.x, tile.y + moveDirs[i].y);
+                                if (map.IsWall(checkTileA) == false)
                                 {
-                                    if (stepField[newTile.x + newTile.y * map.width] < minNeighborCost)
+                                    if (map.IsWall(checkTileB) == false)
                                     {
-                                        minNeighborCost = stepField[newTile.x + newTile.y * map.width];
-                                        bestNeighbor = newTile;
+                                        float moveCost = map.GetMapTile(newTile).moveCost;
+                                        if (map.IsCurrentOccupantTicker(newTile))
+                                        {
+                                            moveCost += map.GetOccupants(newTile) * .5f;
+                                        }
+                                        if (pathType != PathType.Default)
+                                        {
+                                            if (pathType == map.GetMapTile(newTile).pathType)
+                                            {
+                                                moveCost *= .3f;
+                                            }
+                                        }
+                                        float cost = moveCost * moveDirs[i].magnitude + existingCost;
+                                        if (cost < stepField[newTile.x + newTile.y * map.width])
+                                        {
+                                            stepField[newTile.x + newTile.y * map.width] = cost;
+                                            nextSet.Add(newTile);
+                                        }
                                     }
                                 }
                             }
                         }
                     }
-
-                    Vector2Int intFlow = new Vector2Int(bestNeighbor.x - tile.x, bestNeighbor.y - tile.y);
-                    flow = new Vector2(intFlow.x, intFlow.y);
-                    if (flow.sqrMagnitude > 0f)
-                    {
-                        flow = flow.normalized;
-                    }
                 }
-                flowField[i + j * map.width] = flow;
+                NativeList<Vector2Int> temp = openSet;
+                openSet = nextSet;
+                nextSet = temp;
+                nextSet.Clear();
+            }
+
+            for (i = 0; i < map.width; i++)
+            {
+                for (j = 0; j < map.height; j++)
+                {
+                    Vector2Int tile = new Vector2Int(i, j);
+                    Vector2 flow = Vector2.zero;
+                    if (map.IsWall(tile) == false)
+                    {
+                        float myCost = stepField[i + j * map.width];
+                        float minNeighborCost = myCost;
+                        Vector2Int bestNeighbor = new Vector2Int(i, j);
+                        for (k = 0; k < moveDirs.Length; k++)
+                        {
+                            Vector2Int newTile = new Vector2Int(tile.x + moveDirs[k].x, tile.y + moveDirs[k].y);
+                            if (map.IsInsideMap(newTile))
+                            {
+                                Vector2Int checkTileA = new Vector2Int(tile.x + moveDirs[k].x, tile.y);
+                                Vector2Int checkTileB = new Vector2Int(tile.x, tile.y + moveDirs[k].y);
+                                if (map.IsWall(checkTileA) == false)
+                                {
+                                    if (map.IsWall(checkTileB) == false)
+                                    {
+                                        if (stepField[newTile.x + newTile.y * map.width] < minNeighborCost)
+                                        {
+                                            minNeighborCost = stepField[newTile.x + newTile.y * map.width];
+                                            bestNeighbor = newTile;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        Vector2Int intFlow = new Vector2Int(bestNeighbor.x - tile.x, bestNeighbor.y - tile.y);
+                        flow = new Vector2(intFlow.x, intFlow.y);
+                        if (flow.sqrMagnitude > 0f)
+                        {
+                            flow = flow.normalized;
+                        }
+                    }
+                    flowField[i + j * map.width] = flow;
+                }
             }
         }
         UnityEngine.Profiling.Profiler.EndSample();
