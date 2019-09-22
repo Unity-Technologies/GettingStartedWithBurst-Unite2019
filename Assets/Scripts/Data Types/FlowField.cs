@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 using Unity.Collections;
+using Unity.Jobs;
+using Unity.Burst;
 
 public class FlowField
 {
@@ -89,6 +91,41 @@ public class FlowField
         }
 
         UnityEngine.Profiling.Profiler.BeginSample("FlowGenerate");
+
+        var myJob = new MyJob {
+            map=map.mapDataStore, pathType=pathType, stepField=stepField,
+            flowField=flowField, nextSet=nextSet, openSet=openSet
+        };
+        myJob.Run();
+
+        UnityEngine.Profiling.Profiler.EndSample();
+    }
+}
+
+[BurstCompile]
+struct MyJob : IJob
+{
+    public Map.MapDataStore map;
+    public NativeArray<float> stepField;
+    public NativeArray<Vector2> flowField;
+
+    public PathType pathType;
+
+    static readonly Vector2Int[] moveDirs = new Vector2Int[] {new Vector2Int(0,1),
+                                          new Vector2Int(1,1),
+                                          new Vector2Int(1,0),
+                                          new Vector2Int(1,-1),
+                                          new Vector2Int(0,-1),
+                                          new Vector2Int(-1,-1),
+                                          new Vector2Int(-1,0),
+                                         new Vector2Int(-1,1)};
+
+    public NativeList<Vector2Int> openSet;
+    public NativeList<Vector2Int> nextSet;
+
+    public void Execute()
+    {
+        int i,j,k;
         while (openSet.Length > 0)
         {
             for (j = 0; j < openSet.Length; j++)
@@ -180,6 +217,5 @@ public class FlowField
                 flowField[i + j * map.width] = flow;
             }
         }
-        UnityEngine.Profiling.Profiler.EndSample();
     }
 }
