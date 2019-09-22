@@ -1,6 +1,9 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Unity.Collections;
+using Unity.Jobs;
+using Unity.Burst;
 
 public class BotManager : MonoBehaviour
 {
@@ -210,78 +213,37 @@ public class BotManager : MonoBehaviour
         UnityEngine.Profiling.Profiler.EndSample();
 
         UnityEngine.Profiling.Profiler.BeginSample("Transform");
+
+#region Make A Temporary Array
+        var arrayOfBots = new NativeArray<BotValues>(bots.Count, Allocator.TempJob);
+#endregion
+
+#region Copy Only The Values We Actually Need
         for (i = 0; i < bots.Count; i++)
         {
-            FactoryBot bot1 = bots[i];
-            for (j = i + 1; j < bots.Count; j++)
-            {
-                FactoryBot bot2 = bots[j];
-                if (bot2.position.x - bot2.radius > bot1.position.x + bot1.radius)
-                {
-                    break;
-                }
-                else
-                {
-                    Vector2 delta = bot2.position - bot1.position;
-                    float dist = delta.magnitude;
-                    if (dist < bot1.radius + bot2.radius)
-                    {
-                        bot1.hitCount++;
-                        bot2.hitCount++;
-                        Vector2 moveVector = delta.normalized * (dist - (bot1.radius + bot2.radius)) * .4f;
-
-                        Vector2 moveVector1 = moveVector;
-                        Vector2 moveVector2 = -moveVector;
-
-                        Vector2Int newTile = new Vector2Int(Mathf.FloorToInt(bot1.position.x + moveVector1.x + .5f), Mathf.FloorToInt(bot1.position.y + .5f));
-                        if (factory.map.IsInsideMap(newTile) == false)
-                        {
-                            moveVector1.x = 0f;
-                        }
-                        else if (factory.map.IsWall(newTile))
-                        {
-                            moveVector1.x = 0f;
-                        }
-
-                        newTile = new Vector2Int(Mathf.FloorToInt(bot1.position.x + .5f), Mathf.FloorToInt(bot1.position.y + moveVector1.y + .5f));
-                        if (factory.map.IsInsideMap(newTile) == false)
-                        {
-                            moveVector1.y = 0f;
-                        }
-                        else if (factory.map.IsWall(newTile))
-                        {
-                            moveVector1.y = 0f;
-                        }
-
-
-                        newTile = new Vector2Int(Mathf.FloorToInt(bot2.position.x + moveVector2.x + .5f), Mathf.FloorToInt(bot2.position.y + .5f));
-                        if (factory.map.IsInsideMap(newTile) == false)
-                        {
-                            moveVector2.x = 0f;
-                        }
-                        else if (factory.map.IsWall(newTile))
-                        {
-                            moveVector2.x = 0f;
-                        }
-
-                        newTile = new Vector2Int(Mathf.FloorToInt(bot2.position.x + .5f), Mathf.FloorToInt(bot2.position.y + moveVector2.y + .5f));
-                        if (factory.map.IsInsideMap(newTile) == false)
-                        {
-                            moveVector2.y = 0f;
-                        }
-                        else if (factory.map.IsWall(newTile))
-                        {
-                            moveVector2.y = 0f;
-                        }
-
-                        bot1.position += moveVector1;
-                        bots[i] = bot1;
-                        bot2.position += moveVector2;
-                        bots[j] = bot2;
-                    }
-                }
-            }
+            arrayOfBots[i] = new BotValues { position = bots[i].position, radius = bots[i].radius, hitCount = bots[i].hitCount };
         }
+#endregion
+
+#region Run Our Transform Via The Job System
+        var runMyJob = new BotManagerJob { bots=arrayOfBots, map=factory.map.mapDataStore};
+        runMyJob.Run();
+#endregion
+
+#region Copy Only The Transformed Values Back
+        for (i = 0; i < bots.Count; i++)
+        {
+            var t = bots[i];
+            t.position = arrayOfBots[i].position;
+            t.hitCount = arrayOfBots[i].hitCount;
+            bots[i] = t;
+        }
+#endregion
+
+#region Dispose Of Our Temporary Allocation
+        arrayOfBots.Dispose();
+#endregion
+
         UnityEngine.Profiling.Profiler.EndSample();
 
         UnityEngine.Profiling.Profiler.BeginSample("MatrixColor");
@@ -311,4 +273,101 @@ public class BotManager : MonoBehaviour
         }
         UnityEngine.Profiling.Profiler.EndSample();
     }
+}
+
+#region Temporary Struct For Transform Job
+public struct BotValues
+{
+    public Vector2 position;
+    public float radius;
+    public int hitCount;
+}
+#endregion
+
+[BurstCompile]
+public struct BotManagerJob : IJob
+{
+#region Variables for our Job
+    public Map.MapDataStore map;
+    public NativeArray<BotValues> bots;
+#endregion
+
+    public void Execute()
+    {
+#region The transform code
+        int i,j;
+        for (i = 0; i < bots.Length; i++)
+        {
+            var bot1 = bots[i];
+            for (j = i + 1; j < bots.Length; j++)
+            {
+                var bot2 = bots[j];
+                if (bot2.position.x - bot2.radius > bot1.position.x + bot1.radius)
+                {
+                    break;
+                }
+                else
+                {
+                    Vector2 delta = bot2.position - bot1.position;
+                    float dist = delta.magnitude;
+                    if (dist < bot1.radius + bot2.radius)
+                    {
+                        bot1.hitCount++;
+                        bot2.hitCount++;
+                        Vector2 moveVector = delta.normalized * (dist - (bot1.radius + bot2.radius)) * .4f;
+
+                        Vector2 moveVector1 = moveVector;
+                        Vector2 moveVector2 = -moveVector;
+
+                        Vector2Int newTile = new Vector2Int(Mathf.FloorToInt(bot1.position.x + moveVector1.x + .5f), Mathf.FloorToInt(bot1.position.y + .5f));
+                        if (map.IsInsideMap(newTile) == false)
+                        {
+                            moveVector1.x = 0f;
+                        }
+                        else if (map.IsWall(newTile))
+                        {
+                            moveVector1.x = 0f;
+                        }
+
+                        newTile = new Vector2Int(Mathf.FloorToInt(bot1.position.x + .5f), Mathf.FloorToInt(bot1.position.y + moveVector1.y + .5f));
+                        if (map.IsInsideMap(newTile) == false)
+                        {
+                            moveVector1.y = 0f;
+                        }
+                        else if (map.IsWall(newTile))
+                        {
+                            moveVector1.y = 0f;
+                        }
+
+
+                        newTile = new Vector2Int(Mathf.FloorToInt(bot2.position.x + moveVector2.x + .5f), Mathf.FloorToInt(bot2.position.y + .5f));
+                        if (map.IsInsideMap(newTile) == false)
+                        {
+                            moveVector2.x = 0f;
+                        }
+                        else if (map.IsWall(newTile))
+                        {
+                            moveVector2.x = 0f;
+                        }
+
+                        newTile = new Vector2Int(Mathf.FloorToInt(bot2.position.x + .5f), Mathf.FloorToInt(bot2.position.y + moveVector2.y + .5f));
+                        if (map.IsInsideMap(newTile) == false)
+                        {
+                            moveVector2.y = 0f;
+                        }
+                        else if (map.IsWall(newTile))
+                        {
+                            moveVector2.y = 0f;
+                        }
+
+                        bot1.position += moveVector1;
+                        bots[i] = bot1;
+                        bot2.position += moveVector2;
+                        bots[j] = bot2;
+                    }
+                }
+            }
+        }
+#endregion
+   }
 }
