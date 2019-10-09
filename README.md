@@ -8,4 +8,6 @@ The original project comes from the [DOTS Training Repository](https://github.co
 
 Final Slides for the talk are also available here in PDF form. 
 
-The branch named Presentation, was used in order to reduce the typing needed during the live presentation
+The branch named Presentation, was used in order to reduce the typing needed during the live presentation.
+
+Here is a link to the recording of the talk on youtube : https://www.youtube.com/watch?v=Tzn-nX9hK1o
